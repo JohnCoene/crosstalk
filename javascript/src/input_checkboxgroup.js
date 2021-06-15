@@ -13,6 +13,17 @@ input.register({
      */
     let ctHandle = new FilterHandle(data.group);
 
+    let keys = {};
+    
+    data.selected.forEach(function(value) {
+      data.map[value].forEach(function(key) {
+        keys[key] = true;
+      });
+    });
+    let keyArray = Object.keys(keys);
+    keyArray.sort();
+    ctHandle.set(keyArray);
+
     let lastKnownKeys;
     let $el = $(el);
     $el.on("change", "input[type='checkbox']", function() {

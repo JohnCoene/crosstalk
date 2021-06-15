@@ -57,7 +57,7 @@ ionrangesliderLibs <- function() {
   )
 }
 
-makeGroupOptions <- function(sharedData, group, allLevels) {
+makeGroupOptions <- function(sharedData, group, allLevels, selected = NULL) {
   df <- sharedData$data(
     withSelection = FALSE,
     withFilter = FALSE,
@@ -90,7 +90,8 @@ makeGroupOptions <- function(sharedData, group, allLevels) {
   options <- list(
     items = data.frame(value = lvls_str, label = lvls_str, stringsAsFactors = FALSE),
     map = setNames(vals, lvls_str),
-    group = sharedData$groupName()
+    group = sharedData$groupName(),
+    selected = selected
   )
 
   options
@@ -166,12 +167,15 @@ columnize <- function(columnCount, elements) {
 #'
 #' @rdname filter_select
 #' @export
-filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inline = FALSE, columns = 1) {
-  options <- makeGroupOptions(sharedData, group, allLevels)
+filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inline = FALSE, 
+  columns = 1, selected = NULL) {
+  options <- makeGroupOptions(sharedData, group, allLevels, selected)
 
   labels <- options$items$label
   values <- options$items$value
   options$items <- NULL # Doesn't need to be serialized for this type of control
+
+  isValidSelected(values, selected)
 
   makeCheckbox <- if (inline) inlineCheckbox else blockCheckbox
 
@@ -181,7 +185,7 @@ filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inl
       tags$div(class = "crosstalk-options-group",
         columnize(columns,
           mapply(labels, values, FUN = function(label, value) {
-            makeCheckbox(id, value, label)
+            makeCheckbox(id, value, label, selected)
           }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
         )
       ),
@@ -194,18 +198,41 @@ filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inl
   ))
 }
 
-blockCheckbox <- function(id, value, label) {
+isValidSelected <- function(values, selected){
+
+  if(all(selected %in% values)) 
+    return()
+   
+  erroneous <- values[!values %in% selected]
+  warning(
+    "selected `",
+    paste0(erroneous, collapse = "`, `"),
+    "` not in `values`"
+  )
+}
+
+blockCheckbox <- function(id, value, label, selected) {
+  input <- tags$input(type = "checkbox", name = id, value = value)
+
+  if(value %in% selected)
+    input <- htmltools::tagAppendAttributes(input, checked = NA)
+
   tags$div(class = "checkbox",
     tags$label(
-      tags$input(type = "checkbox", name = id, value = value),
+      input,
       tags$span(label)
     )
   )
 }
 
-inlineCheckbox <- function(id, value, label) {
+inlineCheckbox <- function(id, value, label, selected) {
+  input <- tags$input(type = "checkbox", name = id, value = value)
+
+  if(value %in% selected)
+    input <- htmltools::tagAppendAttributes(input, checked = NA)
+
   tags$label(class = "checkbox-inline",
-    tags$input(type = "checkbox", name = id, value = value),
+    input,
     tags$span(label)
   )
 }

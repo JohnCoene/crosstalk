@@ -735,6 +735,17 @@ input.register({
      */
     var ctHandle = new _filter.FilterHandle(data.group);
 
+    var keys = {};
+
+    data.selected.forEach(function (value) {
+      data.map[value].forEach(function (key) {
+        keys[key] = true;
+      });
+    });
+    var keyArray = Object.keys(keys);
+    keyArray.sort();
+    ctHandle.set(keyArray);
+
     var lastKnownKeys = void 0;
     var $el = $(el);
     $el.on("change", "input[type='checkbox']", function () {
@@ -743,16 +754,16 @@ input.register({
         lastKnownKeys = null;
         ctHandle.clear();
       } else {
-        var keys = {};
+        var _keys = {};
         checked.each(function () {
           data.map[this.value].forEach(function (key) {
-            keys[key] = true;
+            _keys[key] = true;
           });
         });
-        var keyArray = Object.keys(keys);
-        keyArray.sort();
-        lastKnownKeys = keyArray;
-        ctHandle.set(keyArray);
+        var _keyArray = Object.keys(_keys);
+        _keyArray.sort();
+        lastKnownKeys = _keyArray;
+        ctHandle.set(_keyArray);
       }
     });
 
